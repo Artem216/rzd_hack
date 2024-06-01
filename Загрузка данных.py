@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import os
-import components.data_preprossesing as dp 
+import data_preprossesing as dp 
 
  
 st.set_page_config(page_title="Загрузка данных", 
