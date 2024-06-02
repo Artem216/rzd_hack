@@ -171,7 +171,6 @@ def get_dicts_poligon_park(data_):
     for poligon, park in set(zip(data_['Наименование полигона'], data_['Наименование структурного подразделения'])):
         if not isinstance(poligon, str) or not isinstance(park, str):
             continue
-        print(poligon, park)
         if dict_poligon_park.get(poligon):
             dict_poligon_park[poligon].append(park)
         elif dict_park_poligon.get(park):
@@ -190,7 +189,7 @@ def get_list_park(data_):
     return list(set(data_[data_['Наименование структурного подразделения'].notna()]['Наименование структурного подразделения']))
 
 def get_info_use(data_, poligon_name, park_name):
-    data_rdy = preprossesing_data(data_)
+    data_rdy = data_.copy()
     group = data_rdy.groupby(
         ['Наименование полигона', 
         'Краткое наименование', 
@@ -208,3 +207,24 @@ def get_info_use(data_, poligon_name, park_name):
     
     return row_info['in_use'].values[0], row_info['not_in_use'].values[0]
 
+def get_date_grade(data_rdy_, poligon, park):
+    data = data_rdy_.copy()
+    data = func_for_catboost(data, 1)
+
+    data_park = data[(data['Наименование полигона'] == poligon) & 
+                (data['Наименование структурного подразделения'] == park)]
+    data_park = data_park[['Дата', 'grade']].sort_values('Дата')
+
+    data_poligon = data[(data['Наименование полигона'] == poligon)]
+    data_poligon_i = []
+    for park_i in data_poligon['Наименование структурного подразделения'].unique():
+        data_poligon_i.append(data_poligon[data_poligon['Наименование структурного подразделения'] == park_i][['Дата', 'grade']])
+    
+    data_poligon = data_poligon_i[0]
+    for i in range(1, len(data_poligon_i)):
+        data_poligon = data_poligon.merge(data_poligon_i[i], on='Дата', how='outer').sort_values('Дата')
+    data_poligon['mean_grade'] = data_poligon.iloc[:, 1:].mean(1)
+    data_poligon = data_poligon[['Дата', 'mean_grade']].sort_values('Дата')
+
+    return data_park.merge(data_poligon, on='Дата', how='left').sort_values('Дата')
+    
