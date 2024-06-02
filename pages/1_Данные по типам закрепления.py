@@ -47,12 +47,13 @@ name, authentication_status, username = authenticator.login()
 if authentication_status:
     authenticator.logout('Logout', 'main')
     
+    
     path_data_rdy = './data/data_rdy.xlsx'
     data = pd.read_excel(path_data_rdy)
 
     if username in MMDPR_LIST:
             data = data[data['Наименование структурного подразделения'] == 'Московская механизированная дистанция погрузочно-разгрузочных рабо#']
-
+            
     data_cat = dp.func_for_catboost(data, 1)
 
     data_filtered_poezdki = data[(data['Данные путевых листов, пробег'].notna()) & (data['Данные путевых листов, пробег'] != 0)]
