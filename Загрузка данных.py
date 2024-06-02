@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-ADMIN_LIST = ['admin', 'admin1']
+ADMIN_LIST = os.getenv("ADMIN_LIST").split(",")
 
 import base64
 

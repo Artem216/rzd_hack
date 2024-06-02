@@ -3,6 +3,9 @@ import pandas as pd
 import os
 import data_preprossesing as dp 
 import altair as alt
+import plotly.graph_objs as go
+
+
 
 import streamlit_authenticator as stauth
 
@@ -44,67 +47,13 @@ name, authentication_status, username = authenticator.login()
 if authentication_status:
     authenticator.logout('Logout', 'main')
     
-    # st.title("Выбор")
-    # col1, col2, col3 = st.columns(3)
-
-    # path_save_file = './data/data.xlsx'
-    # if not os.path.exists(path_save_file):
-    #     st.write("Загрузите данные")
-
-    # if os.path.exists(path_save_file):
-        
-    #     data = pd.read_excel('./data/data.xlsx')
-
-    #     if username in MMDPR_LIST:
-    #         data = data[data['Наименование структурного подразделения'] == 'Московская механизированная дистанция погрузочно-разгрузочных рабо#']
-
-    #     dict_poligon_park, dict_park_poligon = dp.get_dicts_poligon_park(data)
-        
-    #     with col1:
-    #         poligon = st.selectbox(
-    #             "Выберите полигон",
-    #             dp.get_list_poligon(data),
-    #             index=None,
-    #             placeholder="Выберите полигон...")
-        
-    #     if poligon:
-    #         with col2:
-    #             park = st.selectbox(
-    #                 "Выберите подразделение",
-    #                 dict_poligon_park.get(poligon),
-    #                 index=None,
-    #                 placeholder="Выберите подразделение...")
-    #     with col1:
-    #         if st.button('start'):
-    #             if not isinstance(poligon, str) or not isinstance(park, str):
-    #                 st.write('Заполните все поля')
-    #             else:
-    #                 df_use = pd.DataFrame({'Использование': ['В целевой структуре парка', 'Прочие'],
-    #                             'Количество машин': dp.get_info_use(data, poligon, park)})
-    #                 bars  = alt.Chart(df_use).mark_bar().encode(
-    #                 x=alt.X('Использование', axis=alt.Axis(labelAngle=0)),  # labelAngle=0 для горизонтальных меток
-    #                 y='Количество машин'
-    #                 ).properties(
-    #                     width=900  # Задаем ширину графика
-    #                 )
-
-    #                 text = bars.mark_text(
-    #                     align='center',
-    #                     baseline='bottom',
-    #                     dy=-5  # Небольшое смещение вверх
-    #                 ).encode(
-    #                     text='Количество машин:Q'
-    #                 )
-
-    #                 # Объединение графика и аннотаций
-    #                 chart = bars + text
-    #                 col1, col2, col3 = st.columns(3)
-    #                 with col2:
-    #                     # st.pyplot(chart)
-    #                     st.altair_chart(chart)
-
     path_data_rdy = './data/data_rdy.xlsx'
     data = pd.read_excel(path_data_rdy)
+
+    if username in MMDPR_LIST:
+            data = data[data['Наименование структурного подразделения'] == 'Московская механизированная дистанция погрузочно-разгрузочных рабо#']
+
+    data_cat = dp.func_for_catboost(data, 1)
 
     data_filtered_poezdki = data[(data['Данные путевых листов, пробег'].notna()) & (data['Данные путевых листов, пробег'] != 0)]
     data_filtered_telematika = data[(data['Данные телематики, пробег'].notna()) & (data['Данные телематики, пробег'] != 0)]
@@ -165,6 +114,7 @@ if authentication_status:
             .reset_index()
         )
         poligon_car_relax[aggregate_column] = poligon_car_relax[aggregate_column].map(lambda x: [i for i in x if isinstance(i, str)])
+        poligon_car_relax['Количество машин в целевой структуре парка'] = poligon_car_relax[aggregate_column].map(lambda x: len(x))
         return poligon_car_relax
 
     dict_poligon_park, dict_park_poligon = dp.get_dicts_poligon_park(data)
@@ -175,17 +125,94 @@ if authentication_status:
         index=None,
         placeholder="Выберите полигон...")
 
-    if poligon:
-        park = col2.selectbox(
-            "Выберите подразделение",
-            dict_poligon_park.get(poligon),
-            index=None,
-            placeholder="Выберите подразделение...")
-            
-        st.dataframe(give_chillusha(result))
+    user_date_input = col3.date_input(
+    f"Значения для даты",
+    value=(
+        result['Дата'].min(),
+        result['Дата'].max(),
+    ))
+    park = col2.selectbox(
+        "Выберите подразделение",
+        dict_poligon_park.get(poligon) if poligon else dp.get_list_park(data),
+        index=None,
+        placeholder="Выберите подразделение...")
 
-        if park:
-            st.dataframe(give_chillusha(result, '2024-04-01', '2024-04-30', group_by_column='Наименование структурного подразделения', aggregate_column='Номера в целевой структуре парка'))
+    if col1.button('Рассчитать'):
+        if not len(user_date_input) == 2 or not park or not poligon:
+            st.write('Заполните все поля')
+        elif len(user_date_input) == 2 and park and poligon:
+            user_date_input = tuple(map(pd.to_datetime, user_date_input))
+            start_date, end_date = user_date_input
+            result = result.loc[result['Дата'].between(start_date, end_date)]
+            result = result[result['Наименование структурного подразделения'] == park]
+
+            data_cat = data_cat.loc[data_cat['Дата'].between(start_date, end_date)]
+
+            mean_rating_park = data_cat[data_cat['Наименование структурного подразделения'] == park]['grade'].mean()
+            st.markdown(f"### Средний рейтинг подразделения {park} равен <span style='color:red;'>{mean_rating_park:.03}</span>", unsafe_allow_html=True)
+            mean_rating_poligon = data_cat[data_cat['Наименование полигона'] == poligon]['grade'].mean()
+            st.markdown(f"### Средний рейтинг полигона {poligon} равен <span style='color:red;'>{mean_rating_poligon:.03}</span>", unsafe_allow_html=True)
+
+        
+            st.header('Использование ТС')
+            df_use = pd.DataFrame({'Использование': ['В целевой структуре парка', 'Прочие'],
+                        'Количество машин': dp.get_info_use(data, poligon, park)})
+            bars  = alt.Chart(df_use).mark_bar().encode(
+            x=alt.X('Использование', axis=alt.Axis(labelAngle=0)),  # labelAngle=0 для горизонтальных меток
+            y='Количество машин'
+            ).properties(
+                width=900  # Задаем ширину графика
+            )
+
+            text = bars.mark_text(
+                align='center',
+                baseline='bottom',
+                dy=-5
+            ).encode(
+                text='Количество машин:Q'
+            )
+
+            chart = bars + text
+            st.altair_chart(chart)
+
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=result['Дата'], 
+                y=result['Номера машин, которые целевые, но ездили, хотя не должны'].map(len),  # Замените 'grade' на соответствующий столбец для i-той линии
+                mode='lines',
+                line=dict(color='blue'),
+                name=f'Номера машин, которые целевые, но ездили, хотя не должны'  # Добавьте подходящее имя для каждой линии
+            ))
+
+
+            fig.update_layout(
+                title=f'Машины в парке, которые совершали поездки без плана в путевых листах',
+                xaxis_title='Дата',
+                yaxis_title='Количество машин',
+                legend=dict(x=0, y=1),
+                width=800,
+                height=400
+            )
+
+            # Отображение графика в Streamlit
+            st.plotly_chart(fig)
+
+            st.header('Информация о ТС на уровне Полигона')  
+            st.dataframe(give_chillusha(result))
+
+            # if park:
+            #     park_list = dict_poligon_park.get(poligon) 
+            #     data_park = give_chillusha(result, 
+            #                                 '2024-04-01', 
+            #                                 '2024-04-30', 
+            #                                 group_by_column='Наименование структурного подразделения', 
+            #                                 aggregate_column='Номера в целевой структуре парка')
+            st.header('Информация о ТС на уровне Подразделения') 
+            st.dataframe(give_chillusha(result, 
+                                            '2024-04-01', 
+                                            '2024-04-30', 
+                                            group_by_column='Наименование структурного подразделения', 
+                                            aggregate_column='Номера в целевой структуре парка'))
 
 
 
