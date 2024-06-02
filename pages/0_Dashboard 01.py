@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-MMDPR_LIST= os.getenv("MMDPR_LIST").split(",")
+MMDPR_LIST= ['test', 'test1']
 
 
 import yaml
