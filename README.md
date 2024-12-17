@@ -18,6 +18,14 @@
 [number_of_cars](./ml/number_of_cars.ipynb) - анализ машин и их использования  
 [Prepare_func](<./ml/prepare_func%20(3).ipynb>) - то же что и первый файл, только с правками
 
+### Пример работы
+
+![work1](https://github.com/Artem216/rzd_hack/blob/main/imgs/работа1.png)
+
+![work2](https://github.com/Artem216/rzd_hack/blob/main/imgs/работа2.png)
+
+![work2](https://github.com/Artem216/rzd_hack/blob/main/imgs/работа3.png)
+
 ### Сервис
 
 Запустить локально  
