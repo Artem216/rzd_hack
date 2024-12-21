@@ -14,6 +14,8 @@
 
 ## Пример работы
 
+[Видео работы](https://drive.google.com/drive/folders/1vH9uHiOODuBDVjcnE2qAYdDPVqeje5Ke)  
+
 ![work1](https://github.com/Artem216/rzd_hack/blob/main/imgs/работа1.png)
 
 ![work2](https://github.com/Artem216/rzd_hack/blob/main/imgs/работа2.png)
