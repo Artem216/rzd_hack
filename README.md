@@ -12,6 +12,14 @@
 
 Наше решение включает в себя модель машинного обучения, которая позволяет предсказывать рейтинг подразделения через определенный срок, и удобный сервис, где можно будет выбрать на сколько вперед мы хотим делать предсказания. Так же на сервисе можно будет смотреть на информативные дашборды, которые помогут анализировать простой автотранспорта, сравнивать между собой полигоны и отделения. Возможность накладывать фильтры на данные по всем значениям и уже смотреть на графики для конкретного подмножества. 
 
+## Пример работы
+
+![work1](https://github.com/Artem216/rzd_hack/blob/main/imgs/работа1.png)
+
+![work2](https://github.com/Artem216/rzd_hack/blob/main/imgs/работа2.png)
+
+![work2](https://github.com/Artem216/rzd_hack/blob/main/imgs/работа3.png)
+
 ## Структура проекта
 
 Сервис  
@@ -26,15 +34,6 @@
 [Prepare_func](<./ml/prepare_func%20(3).ipynb>) - то же что и первый файл, только с правками  
 [filter_table](https://github.com/Artem216/rzd_hack/blob/main/filter_table.py) - фильтрация для просмотра конкретных данных и построения по ним дашбордов  
 [data_preprossesing](https://github.com/Artem216/rzd_hack/blob/main/data_preprossesing.py) - функции для предобработки данных
-
-
-## Пример работы
-
-![work1](https://github.com/Artem216/rzd_hack/blob/main/imgs/работа1.png)
-
-![work2](https://github.com/Artem216/rzd_hack/blob/main/imgs/работа2.png)
-
-![work2](https://github.com/Artem216/rzd_hack/blob/main/imgs/работа3.png)
 
 ## Запуск решения
 
